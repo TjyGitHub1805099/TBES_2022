@@ -481,6 +481,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\app_t5l_ctrl.c</FilePath>
             </File>
+            <File>
+              <FileName>app_motor_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\app_motor_ctrl.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -535,6 +540,11 @@
               <FileName>app_t5l_ctrl.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\app_t5l_ctrl.h</FilePath>
+            </File>
+            <File>
+              <FileName>app_motor_ctrl.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\app_motor_ctrl.h</FilePath>
             </File>
           </Files>
         </Group>

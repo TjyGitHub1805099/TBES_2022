@@ -34,46 +34,10 @@ typedef enum LedColorType
 }enumLedColorType;
 
 
-#if(COLOR_ALT_20210606_DEFINE)
-
-#define MATER_WEIGHT_CHANEL_NUM	HX711_CHANEL_NUM
-#define SLAVE_WEIGHT_GROUP_NUM	1
-#define SLAVE_WEIGHT_CHANEL_NUM	HX711_CHANEL_NUM
-
-#define ALL_BALANCING_COLOR_NUM		(MATER_WEIGHT_CHANEL_NUM+(SLAVE_WEIGHT_GROUP_NUM*SLAVE_WEIGHT_CHANEL_NUM))
-#define ALL_BALANCING_WEIGHT_NUM	(MATER_WEIGHT_CHANEL_NUM+(SLAVE_WEIGHT_GROUP_NUM*SLAVE_WEIGHT_CHANEL_NUM))
-
-typedef struct BalancingGroupDataType
-{
-	float fMaster[MATER_WEIGHT_CHANEL_NUM];
-	float fSlavers[SLAVE_WEIGHT_GROUP_NUM*SLAVE_WEIGHT_CHANEL_NUM];
-	UINT8 u8MasterDataLen;
-	UINT8 u8SlaversDataLen[SLAVE_WEIGHT_GROUP_NUM];
-	UINT8 u8ClrValue[2][ALL_BALANCING_COLOR_NUM];
-	UINT16 u16WgtValue[2][ALL_BALANCING_WEIGHT_NUM];
-}sBalancingGroupDataType;
-
-#endif
-
-void led_init(void);
-extern void led_MainFunction(void);
-UINT8 LedDataSet(enumLedSeqType seq , enumLedColorType color);
-void useWeightUpdateLedAndSdweColor(UINT8 hx711DataUpgrade);
-void useWeightCompareOutColor(UINT8 hx711DataUpgrade);
-extern void useWeightUpdataOutColor(UINT8 hx711DataUpgrade);
-extern void useWeightUpdataOutColor_3030(UINT8 hx711DataUpgrade);
-void LedSysTest(UINT32 ms_tick);
-extern UINT8 led_test_flag ;
-extern void balaningColorClear(void);
 
 
-#if(COLOR_ALT_20210414_DEFINE)
-extern void useWeightUpdataOutColor_20210414(UINT8 hx711DataUpgrade);
-#endif
 
-#if(COLOR_ALT_20210606_DEFINE)
-extern void useWeightUpdataOutColor_20210606(UINT8 hx711DataUpgrade);
-#endif
+
 
  //led program indicate
 extern void app_LED_RUN(UINT16 cycle);

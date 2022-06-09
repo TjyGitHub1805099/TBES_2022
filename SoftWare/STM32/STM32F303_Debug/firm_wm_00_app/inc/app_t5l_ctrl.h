@@ -9,47 +9,123 @@
 
 #define T5L_DMG_UART_DATA_LEN	(0X100)
 #define SDWE_CRC16_EN 			(1)
-//================================================================================================
-//==(update:20210328):DIWEN reserve (uodate to v3:2021.03.26)
+//==(update:20220609):SDWE reserve
 #define DMG_MIN_DIFF_OF_TWO_SEND_ORDER			(50)//50ms 
-#define DMG_DATA_HOLD_TIME						(250)//250ms
 
-//==(update:20210328):address of set chanel number : 0->all chanel set  ; (1~8)->single chanel set
-#define DMG_FUNC_SET_CHANEL_NUM					(0X2100)
+//================================================================================================
+
+//==(update:20220609):address of set chanel number : 0->all chanel set  ; (1~8)->single chanel set
+#define SCREEN_FUNC_SET_CHANEL_NUM				(0X2100)
+
 //==(update:20210328):address of reset calibration of choice chanel number : 0->all chanel set  ; (1~x)->single chanel set
-#define DMG_FUNC_RESET_CALIBRATION_ADDRESS		(0X2101)
+#define SCREEN_RESET_CALIBRATION_ADDRESS		(0X2101)
+
+//==(update:20210328):address of remove weight
+#define SCREEN_REMOVE_WEIGHT_ADDRESS			(0X2102)
+#define SCREEN_REMOVE_WEIGHT_TRIG_VAL			(0XA55A)
+
+//==(update:20210428):address of remove weight
+#define SCREEN_JUNPTO_CALIBRATION_ADDRESS		(0X2103)
+#define SCREEN_JUNPTO_CALIBRATION_TRIG_VAL		(2021)
+#define SCREEN_JUNPTO_ACTIVE_TRIG_VAL			(1202)
+
+
+//==(update:20210328):address of set point(weight value) of chanel : (0~9)-> point of chanel set (:g)
+#define SCREEN_SET_CHANEL_POINT_ADDRESS						(0X2200)//0x2200~0x2209
+
+//==(update:20210328):address of triger COLOR back to DMG : (0~9)-> COLOR of point of chanel set triger(val=0x00:white(not triger),val=0x01green(triger))
+#define SCREEN_ASK_CHANEL_POINT_TRIG_BACK_COLOR_ADDRESS		(0X2300)//0x2300~0x2309
+
+//==(update:20210328):address of triger sample back to DMG : (0~9)-> COLOR of point of chanel set triger(val=0x00:white(not triger),val=0x01green(triger))
+#define SCREEN_ASK_CHANEL_POINT_TRIG_SAMPLE_DATA_ADDRESS	(0X2400)//0x2400~0x2409
+
+
+//==(update:20210328):address of set point of chanel triger : (0~9)-> point of chanel set triger(val=0x12FE(DMG triger MCU))
+#define SCREEN_SET_CHANEL_POINT_TRIG_ADDRESS				(0X2500)//0x2500~0x2509
+#define SCREEN_SET_CHANEL_POINT_TRIG_VAL					(0X12FE)
+
+
+
+//
+#define SDWE_CYCLE_DATA_START_ADDRESS		(0X3000)//MCU -> SDWe
+
+//
+#define SDWE_BOOT_ANIMATION_ADDRESS			(0X3500)//开机动画 图标变量 vlu=0~16
+#define SDWE_BACKANDSET_A_CONTRL_ADDRESS	(0X3501)//返回.结束.设置 开关指令 触发状态跳变 默认=0：返回 1：结束 2：设置
+#define SDWE_BACKANDSET_B_CONTRL_ADDRESS	(0X3502)//返回.结束.设置 开关指令 触发状态跳变 默认=0：返回 1：结束 2：设置
+#define SDWE_GJF_CONTRL_ADDRESS				(0X3503)//管夹阀 开关指令 触发状态跳变 默认=0：管夹阀开 1：管夹阀开
+#define SDWE_RUN_CONTRL_ADDRESS				(0X3504)//运行.暂停 开关指令 触发状态跳变 默认=1：运行 0：暂停
+#define SDWE_ENTER_REALTIME_CONTRL_ADDRESS	(0X3505)//进入实时界面 开关指令 200/300/400
+
+//
+#define SDWE_YUSHEZHONGLIANG_200_ADDRESS 	(0X3600)//SDWE->MCU
+#define SDWE_YUSHEZHONGLIANG_300_ADDRESS 	(0X3601)//SDWE->MCU
+#define SDWE_YUSHEZHONGLIANG_400_ADDRESS 	(0X3602)//SDWE->MCU
+#define SDWE_YAOBAISHIJIAN_ADDRESS			(0X3603)//SDWE->MCU
+#define SDWE_YAOBAIJIAODU_ADDRESS			(0X3604)//SDWE->MCU
+#define SDWE_ML_G_BILU_ADDRESS 				(0X3605)//SDWE->MCU
+#define SDWE_FMQKQD_ADDRESS 				(0X3606)//SDWE->MCU
+#define SDWE_LIUSUDIAN_GAO_BAOJIN_ADDRESS 	(0X3607)//SDWE->MCU
+#define SDWE_LIUSUDIAN_DI_BAOJIN_ADDRESS 	(0X3608)//SDWE->MCU
+#define DMG_FUNC_SET_VOICE_NUM_ADDRESS		(0X3609)//SDWE->MCU
+#define DMG_FUNC_SET_SCREEN_LIGHT_ADDRESS	(0X360A)//SDWE->MCU
+#define DMG_FUNC_SET_ERR_RANGE_ADDRESS		(0X360B)//SDWE->MCU
+#define DMG_FUNC_SET_MAX_RANGE_ADDRESS		(0X360C)//SDWE->MCU
+#define DMG_FUNC_SET_MIN_RANGE_ADDRESS		(0X360D)//SDWE->MCU
+#define DMG_FUNC_SET_ZERO_RANGE_ADDRESS		(0X360E)//SDWE->MCU
+#define SDWE_GUANJIAFAGONGNENGKAIQI_ADDRESS (0X360F)//SDWE->MCU
+
+#define SDWE_GUANJIAFAGONGNENGKAIQI_EN		(1)
+
+//
+#define SDWE_RTC_TIME_SET_HH_ADDRESS		(0X3703)//SDWE->MCU
+#define SDWE_RTC_TIME_SET_MM_ADDRESS		(0X3704)//SDWE->MCU
+#define SDWE_RTC_TIME_SET_SS_ADDRESS		(0X3705)//SDWE->MCU
+
+
+
+//例如把RTC设置为2015-06-01星期一18:56:00，串口发送以下指令： 
+//A5 5A 0A 80 1F 5A 15 06 01 00 18 56 00 VGUS屏会自动换算星期，改写时间时星期可以写任意值。
+//读取日历（YY:MM:DD:WW:HH:MM:SS）：A5 5A 03 81 20 07
+#define SDWE_RTC_TIMER_ADDRESS				(0X20)//后面7个字节      	A5 5A 03 81 20 07   
+#define SDWE_RTC_TIMER_LEN					(0X07)//后面7个字节      	A5 5A 03 81 20 07   
+
+//语音音量地址 连续5个
+#define SDWE_VOICE_PRINTF_SET_REG_ADDRESS	(0X50)
+#define SDWE_VOICE_PRINTF_SET_REG_LEN		(5)
+
+//语音音量地址 连续2个
+#define SDWE_VOICE_SET_REG_ADDRESS			(0X53)
+#define SDWE_VOICE_SET_REG_LEN				(2)
+
+//蜂鸣器地址
+#define SDWE_FENGMINGQI_SET_REG_ADDRESS		(0X02)
+#define SDWE_FENGMINGQI_SET_REG_LEN			(1)
+
+
+//页面跳转指令
+#define SYS_SDWE_PAGE_REG_INDEX	(0X03)
+#define SYS_SDWE_PAGE_REG_NUM	(0X02)//0X03 and 0X04
+
+
+
+
+
+
+
 //==(update:20210328):value of reset calibration of choice chanel number:2021 reset calibration
 #define DMG_FUNC_RESET_CALIBRATION_VAL	 		(2021)
 
-//==(update:20210328):address of remove weight
-#define DMG_FUNC_REMOVE_WEIGHT_ADDRESS			(0X2102)
-#define DMG_FUNC_REMOVE_WEIGHT_VAL				(0XA55A)
 
-//==(update:20210428):address of remove weight
-#define DMG_FUNC_JUNPTO_CALIBRATION_ADDRESS		(0X2103)
-#define DMG_FUNC_JUNPTO_CALIBRATION_VAL			(2021)
-#define DMG_FUNC_JUNPTO_ACTIVE_VAL				(1202)
 
 //==(update:20211119):address of syspara entry
 #define DMG_FUNC_JUNPTO_SYSPAR_ADDRESS		(0X2104)
 #define DMG_FUNC_JUNPTO_SYSPAR_VAL			(1010)
 
-//==(update:20210328):address of set point(weight value) of chanel : (0~9)-> point of chanel set (:g)
-#define DMG_FUNC_SET_CHANEL_POINT_ADDRESS		(0X2200)//0x2200~0x2209
-
-//==(update:20210328):address of set point of chanel triger : (0~9)-> point of chanel set triger(val=0x12FE(DMG triger MCU))
-#define DMG_FUNC_SET_CHANEL_POINT_TRIG_ADDRESS	(0X2500)//0x2500~0x2509
-#define DMG_FUNC_SET_CHANEL_POINT_TRIG_VAL		(0X12FE)
 
 
-//==(update:20210328):address of triger COLOR back to DMG : (0~9)-> COLOR of point of chanel set triger(val=0x00:white(not triger),val=0x01green(triger))
-#define DMG_FUNC_ASK_CHANEL_POINT_TRIG_BACK_COLOR_ADDRESS	(0X2300)//0x2300~0x2309
 
-//==(update:20210328):address of triger sample back to DMG : (0~9)-> COLOR of point of chanel set triger(val=0x00:white(not triger),val=0x01green(triger))
-#define DMG_FUNC_ASK_CHANEL_POINT_TRIG_SAMPLE_DATA_ADDRESS	(0X2400)//0x2400~0x2409
 
-//==(update:20210328):address of weight back to DMG : (0~5)-> weight of chanel(val:g)
-#define DMG_FUNC_ASK_CHANEL_WEIGHT_ADDRESS		(0X3000)//0x3000~0x3005
 //==(update:20210328):address of color back to DMG : (0~5)-> color of chanel(val:g)
 #define DMG_FUNC_ASK_CHANEL_COLOR_ADDRESS		(0X3100)//0x3100~0x3105
 
@@ -100,21 +176,6 @@
 
 #define DMG_SYS_STATUS_OF_VOICE_PRINTF_00A1	(0X00A1)
 
-//at BALANCING Page , auto to judge the remaining chanel weight minus
-//to help user to caculate
-//1.find out the remaining chanel
-//2.find out the closed group(minus was smallest)
-//3.send to DIWEN Screen to display
-#define DIFF_JUDGE_GROUP_NUM	(2)//2 group display 
-#define DIFF_JUDGE_DATA_NUM		(3)//num1 num2 minus
-
-
-#define DIFF_JUDGE_GROUP_NUM_SLAVE1	(6)//2 group display 
-#define DIFF_JUDGE_DATA_NUM_SLAVE1	(3)//num1 num2 minus
-
-#define DIFF_TO_DIWEN_DATA_LEN		(DIFF_JUDGE_GROUP_NUM_SLAVE1*DIFF_JUDGE_DATA_NUM_SLAVE1)
-
-
 
 
 //=============================================================SDWE address design ： 20220520
@@ -126,75 +187,8 @@
 #define SYS_CTL_REG_EVENT_INDEX 	(1)//事件位置
 #define SYS_CTL_REG_NUM				(2)
 
-//MCU -> SDWe
-#define SDWE_CYCLE_DATA_START_ADDRESS		(0X3000)
-#define SDWE_BOOT_ANIMATION_ADDRESS			(0X3500)//开机动画 图标变量 vlu=0~16
 
 
-//SDWe -> MCU
-#define SDWE_BACKANDSET_A_CONTRL_ADDRESS	(0X3501)//返回.结束.设置 开关指令 触发状态跳变 默认=0：返回 1：结束 2：设置
-#define SDWE_BACKANDSET_B_CONTRL_ADDRESS	(0X3502)//返回.结束.设置 开关指令 触发状态跳变 默认=0：返回 1：结束 2：设置
-#define SDWE_GJF_CONTRL_ADDRESS				(0X3503)//管夹阀 开关指令 触发状态跳变 默认=0：管夹阀开 1：管夹阀开
-#define SDWE_RUN_CONTRL_ADDRESS				(0X3504)//运行.暂停 开关指令 触发状态跳变 默认=1：运行 0：暂停
-#define SDWE_ENTER_REALTIME_CONTRL_ADDRESS	(0X3505)//进入实时界面 开关指令 200/300/400
-
-
-#define SDWE_RTC_TIME_SET_HH_ADDRESS		(0X3703)
-#define SDWE_RTC_TIME_SET_MM_ADDRESS		(0X3704)
-#define SDWE_RTC_TIME_SET_SS_ADDRESS		(0X3705)
-
-
-
-#define SDWE_WEIGHT_JIAOZHUN_ADDRESS		(0X2103)
-
-
-//例如把RTC设置为2015-06-01星期一18:56:00，串口发送以下指令： 
-//A5 5A 0A 80 1F 5A 15 06 01 00 18 56 00 VGUS屏会自动换算星期，改写时间时星期可以写任意值。
-//读取日历（YY:MM:DD:WW:HH:MM:SS）：A5 5A 03 81 20 07
-#define SDWE_RTC_TIMER_ADDRESS				(0X20)//后面7个字节      	A5 5A 03 81 20 07   
-#define SDWE_RTC_TIMER_LEN					(0X07)//后面7个字节      	A5 5A 03 81 20 07   
-
-#define SDWE_VOICE_PRINTF_SET_REG_ADDRESS	(0X50)
-#define SDWE_VOICE_PRINTF_SET_REG_LEN		(5)
-
-#define SDWE_VOICE_SET_REG_ADDRESS			(0X53)
-#define SDWE_VOICE_SET_REG_LEN				(2)
-
-
-#define SDWE_FENGMINGQI_SET_REG_ADDRESS		(0X02)
-#define SDWE_FENGMINGQI_SET_REG_LEN			(1)
-
-
-#define SDWE_YUSHEZHONGLIANG_200_ADDRESS 	(0X3600)
-#define SDWE_YUSHEZHONGLIANG_300_ADDRESS 	(0X3601)
-#define SDWE_YUSHEZHONGLIANG_400_ADDRESS 	(0X3602)
-
-#define SDWE_YAOBAISHIJIAN_ADDRESS			(0X3603)
-#define SDWE_YAOBAIJIAODU_ADDRESS			(0X3604)
-
-#define SDWE_ML_G_BILU_ADDRESS 				(0X3605)
-#define SDWE_FMQKQD_ADDRESS 				(0X3606)
-
-#define SDWE_LIUSUDIAN_GAO_BAOJIN_ADDRESS 	(0X3607)
-#define SDWE_LIUSUDIAN_DI_BAOJIN_ADDRESS 	(0X3608)
-
-#define DMG_FUNC_SET_VOICE_NUM_ADDRESS		(0X3609)
-
-#define DMG_FUNC_SET_SCREEN_LIGHT_ADDRESS	(0X360A)
-
-#define DMG_FUNC_SET_ERR_RANGE_ADDRESS		(0X360B)
-
-#define DMG_FUNC_SET_MAX_RANGE_ADDRESS		(0X360C)
-#define DMG_FUNC_SET_MIN_RANGE_ADDRESS		(0X360D)
-#define DMG_FUNC_SET_ZERO_RANGE_ADDRESS		(0X360E)
-
-#define SDWE_GUANJIAFAGONGNENGKAIQI_ADDRESS (0X360F)
-#define SDWE_GUANJIAFAGONGNENGKAIQI_EN		(1)
-
-
-
-#define SYS_SDWE_PAGE_REG_INDEX	(0X03)
-#define SYS_SDWE_PAGE_REG_NUM	(0X02)//0X03 and 0X04
 
 
 
@@ -313,22 +307,22 @@ typedef enum
 typedef enum
 {
 	SDWE_CYCLE_DATA_TOTAL_WEIGHT=0,
-	SDWE_CYCLE_DATA_CUN_WEIGHT,
-	SDWE_CYCLE_DATA_PERCENT,
-	SDWE_CYCLE_DATA_PERCENT_TUBIAO,
-	SDWE_CYCLE_DATA_LIUSU,
-	SDWE_CYCLE_DATA_HH_1,
-	SDWE_CYCLE_DATA_MM_1,
-	SDWE_CYCLE_DATA_SS_1,
-	SDWE_CYCLE_DATA_HH_2,
-	SDWE_CYCLE_DATA_MM_2,
-	SDWE_CYCLE_DATA_SS_2,
-	SDWE_CYCLE_DATA_YUSE_WEIGHT,
-	SDWE_CYCLE_DATA_KONGDAI_WEIGHT,
-	SDWE_CYCLE_DATA_STATUS_FJS_A,
-	SDWE_CYCLE_DATA_STATUS_FJS_B,
-	SDWE_CYCLE_DATA_STATUS_FK_FG,
-	SDWE_CYCLE_DATA_STATUS_ZT_YX,
+	SDWE_CYCLE_DATA_CUN_WEIGHT=1,
+	SDWE_CYCLE_DATA_PERCENT=2,
+	SDWE_CYCLE_DATA_PERCENT_TUBIAO=3,
+	SDWE_CYCLE_DATA_LIUSU=4,
+	SDWE_CYCLE_DATA_HH_1=5,
+	SDWE_CYCLE_DATA_MM_1=6,
+	SDWE_CYCLE_DATA_SS_1=7,
+	SDWE_CYCLE_DATA_HH_2=8,
+	SDWE_CYCLE_DATA_MM_2=9,
+	SDWE_CYCLE_DATA_SS_2=10,
+	SDWE_CYCLE_DATA_YUSE_WEIGHT=11,
+	SDWE_CYCLE_DATA_KONGDAI_WEIGHT=12,
+	SDWE_CYCLE_DATA_STATUS_FJS_A=13,
+	SDWE_CYCLE_DATA_STATUS_FJS_B=14,
+	SDWE_CYCLE_DATA_STATUS_FK_FG=15,
+	SDWE_CYCLE_DATA_STATUS_ZT_YX=16,
 	SDWE_CYCLE_DATA_STATUS_MAX
 }enumSDWeCycleDataType;
 
@@ -393,7 +387,7 @@ typedef enum
 	SDWEVoicePrintf_Warn_LiuSu_High=35,//5、请注意采集流速高
 	SDWEVoicePrintf_Warn_LiuSu_Low=36,//6、请注意采集流速低
 	SDWEVoicePrintf_DiDi_DiDi=37,//7、滴滴滴滴滴滴滴滴滴滴滴滴滴
-	SDWEVoicePrintf_QinFangDai=38,//7、滴滴滴滴滴滴滴滴滴滴滴滴滴
+	SDWEVoicePrintf_QinFangDai=38,//8、请放袋
 	SDWEVoicePrintf_MAX,
 }enumSDWEVoicePrintfType;
 
@@ -467,7 +461,7 @@ typedef struct structSdweType
 extern T5LType g_T5L;
 
 /** ModbusRtu设备默认配置 */
-#define T5LDataDefault   { \
+#define SDWeDataDefault   { \
 	SDWeCtlStep_bootAnimation,\
 	FALSE,\
 	0,\
@@ -534,15 +528,18 @@ extern void screenT5L_Init(void);
 extern void sdweSetWeightBackColor(UINT8 seq,UINT8 color);
 extern void pointSampleTrigerDataSet(UINT8 localChanel , UINT8 point , INT16 value);
 extern void pointWeightTrigerDataSet(UINT8 localChanel , UINT8 point , INT16 value);
-extern void sdwe_VoicePrintfPush(tT5LVoinceType u8Voice1 ,tT5LVoinceType u8Voice2);
 extern void pointWeightTrigerDataSet(UINT8 localChanel , UINT8 point , INT16 value);
-extern void sreenT5L_MainFunction(void);
-extern void writeHelpDataFromCom(UINT8 *pHelpData,UINT8 len);
-extern void readHelpDataFromSys(UINT8 *pHelpData,UINT8 len);
-extern void t5lDisPlayDataClear(void);
-extern void readWeightDataFromSys(UINT8 *pWeightData,UINT8 len);
-extern void readColorDataFromSys(UINT8 *pColorData,UINT8 len);
-extern void writeWeightDataFromCom(UINT8 *pWeightData,UINT8 len);
-extern void writeColorDataFromCom(UINT8 *pColorData,UINT8 len);
-extern UINT8 screenT5L_OutputVoice(UINT8 voiceId);
+extern void sreenSDWe_MainFunction(void);
+
+
+
+extern T5LType g_T5L;
+
+
+#define GET_SDWE_CYCLE_DATA_PTR()		(g_T5L.cycleData)
+#define GET_SDWE_CUR_CYCLE_DATA_PTR()	(GET_SDWE_CYCLE_DATA_PTR()[SDWE_CYCLE_DATA_ARR_INDEX_CUR])
+#define GET_SDWE_CUR_CYCLE_DATA(index)	GET_SDWE_CUR_CYCLE_DATA_PTR()[index]
+#define SET_SDWE_CUR_CYCLE_DATA(index,data)	(GET_SDWE_CUR_CYCLE_DATA_PTR()[index] = data)
+
+
 #endif

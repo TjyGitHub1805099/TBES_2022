@@ -19,6 +19,7 @@
 #include "app_t5l_ctrl.h"
 #include "drv_iwdg.h"
 #include "hal_pd_pulse.h"
+#include "app_motor_ctrl.h"
 
 /*******************************************************************************
  * Functions

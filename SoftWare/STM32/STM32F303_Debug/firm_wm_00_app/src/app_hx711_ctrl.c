@@ -374,19 +374,9 @@ void hx711_setAllRemoveWeight(void)
 {
 	ChanelType *pChanel=&HX711Chanel[0];
 	UINT8 chanel_i = 0;
-	UINT8 colorUsed_i = 0 ;
 	for(chanel_i=0;chanel_i<HX711_CHANEL_NUM;chanel_i++)
 	{
 		pChanel[chanel_i].weightRemove = pChanel[chanel_i].weight;
-	}
-	//clear all clor
-	color_clearAllColor();
-	//
-	balaningColorClear();
-	//
-	for(colorUsed_i=0;colorUsed_i<SYS_COLOR_GROUP_NUM;colorUsed_i++)
-	{
-		gSystemPara.userColorUsed[colorUsed_i] = SYS_COLOR_NOT_USED_FLAG;
 	}
 }
 //==sample all chanel data

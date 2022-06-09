@@ -150,35 +150,40 @@ void pos_filter()
 		}
 	}
 }
+
 //==pos filter out get
 UINT8 pos_FilterGet(enumDiLineType type)
 {
 	UINT8 value = SYS_POS_INVALUED;
-	if( (type >= (enumDiLineType)STM32_POS_1) && (type < (STM32_POS_1+SYS_POS_NUM) ))
+	
+	if(type < (STM32_POS_1+SYS_POS_NUM) )
 	{
 		value =  SysPos[type-STM32_POS_1].filterOutput;
 	}
 	return value;
 }
+
 //==pos main function
 void pos_MainFunction(void)
 {
 	pos_filter();
 }
+
 //==key event out get
 UINT8 pos_EventGet(enumDiLineType type)
 {
 	UINT8 value = 0;//not event
-	if( (type >= STM32_POS_1) && (type < (STM32_POS_1+SYS_POS_NUM) ) )
+	if(type < (STM32_POS_1+SYS_POS_NUM) )
 	{
 		value =  SysPos[type-STM32_POS_1].eventGenerate;
 	}
 	return value;
 }
+
 //==key event out clear
 void pos_EventClear(enumDiLineType type)
 {
-	if( (type >= STM32_POS_1) && (type < (STM32_POS_1+SYS_POS_NUM) ) )
+	if(type < (STM32_POS_1+SYS_POS_NUM) )
 	{
 		SysPos[type-STM32_POS_1].eventGenerate = FALSE;
 	}

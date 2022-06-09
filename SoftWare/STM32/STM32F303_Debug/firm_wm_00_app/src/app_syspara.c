@@ -5,6 +5,7 @@
 #include "app_password.h"
 #include "app_hx711_ctrl.h"
 #include "app_t5l_ctrl.h"
+#include "app_motor_ctrl.h"
 
 //store flash data : 8 * (sample value , weight value , k , b , remove value ) , last one is crc
 unionFloatInt32 flashStoreDataBuf[FLASH_STORE_MAX_LEN]={0};
