@@ -1658,82 +1658,71 @@ void screenSDWe_CaiJiWanCheng_Handle(void)
 }
 
 
-
+#define SCREEN_SDWE_SAMPLE_COMPLETE_VOICE_PRINTF_OFFSET		(5000)//5S
 //==语音提示
 void screenSDWe_CaiJiYuYin_Handle(void)
 {
-	static UINT32 didiTick = 0 ;
-	static UINT32 caiYangWanChengCnt = 0 ;
-	
-	//采样完成 = 100% 后 间隔5秒 提示“采集完成”
+	static UINT32 sampleCompletVoicePrintfTick = 0 ;
+
+	//1.当采样超过100%，(立即+间隔)播报：“采集完成” 
 	if(g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 100)
 	{
-		if(FALSE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_WanCheng - SDWEVoicePrintf_CaiJi_KaiShi])
+		if(TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_WanCheng - SDWEVoicePrintf_CaiJi_KaiShi])
 		{
-			didiTick++;
-			if(didiTick >= 2000)//2000 + 3000
+			if(sampleCompletVoicePrintfTick++ >= SCREEN_SDWE_SAMPLE_COMPLETE_VOICE_PRINTF_OFFSET)//间隔播报一次
 			{
-				didiTick = 0 ;
-				g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_WanCheng - SDWEVoicePrintf_CaiJi_KaiShi] = TRUE;
+				if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_WanCheng))
+				{
+					sampleCompletVoicePrintfTick = 0 ;
+					//g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_WanCheng - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
+				}
 			}
 		}
 	}
-	else
+	//2.当采样到95%时播报：“滴滴滴滴”
+	else if(g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 95)
 	{
-		didiTick = 0;
-		caiYangWanChengCnt = 0 ;
-	}
-
-	//==具体语音播报
-	if((TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_KaiShi - SDWEVoicePrintf_CaiJi_KaiShi]) 
-		&& (g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] < 10))
-	{
-		if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_KaiShi))
+		sampleCompletVoicePrintfTick = SCREEN_SDWE_SAMPLE_COMPLETE_VOICE_PRINTF_OFFSET;
+		if(TRUE == g_T5L.cjyyts[SDWEVoicePrintf_DiDi_DiDi - SDWEVoicePrintf_CaiJi_KaiShi])
 		{
-			g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_KaiShi - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
-		}	
+			if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_DiDi_DiDi))
+			{
+				g_T5L.cjyyts[SDWEVoicePrintf_DiDi_DiDi - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
+			}
+		}
 	}
-	else if((TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_80 - SDWEVoicePrintf_CaiJi_KaiShi]) 
-		&& (g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 80))
+	//3.当采样到90%时播报：“采集百分之九十”
+	else if(g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 90)
 	{
-		if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_80))
+		if(TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_90 - SDWEVoicePrintf_CaiJi_KaiShi])
 		{
-			g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_80 - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
-		}	
+			if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_90))
+			{
+				g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_90 - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
+			}
+		}
 	}
-	else if((TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_90 - SDWEVoicePrintf_CaiJi_KaiShi]) 
-			&& (g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 90))
+	//4.当采样到80%时播报：“采集百分之八十”
+	else if(g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 80)
 	{
-		if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_90))
+		if(TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_80 - SDWEVoicePrintf_CaiJi_KaiShi])
 		{
-			g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_90 - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
-		}	
+			if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_80))
+			{
+				g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_80 - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
+			}	
+		}
 	}
-	else if((TRUE == g_T5L.cjyyts[SDWEVoicePrintf_DiDi_DiDi - SDWEVoicePrintf_CaiJi_KaiShi]) 
-			&& (g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 95))
+	//5.当百分比小于100%时，点击开始，播报：“采集开始”
+	else if(g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] < 100)
 	{
-		if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_DiDi_DiDi))
+		if(TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_KaiShi - SDWEVoicePrintf_CaiJi_KaiShi])
 		{
-			g_T5L.cjyyts[SDWEVoicePrintf_DiDi_DiDi - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
-		}	
-	}
-	else if((TRUE == g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_WanCheng - SDWEVoicePrintf_CaiJi_KaiShi]) 
-			&& (g_T5L.cycleData[SDWE_CYCLE_DATA_ARR_INDEX_CUR][SDWE_CYCLE_DATA_PERCENT] >= 100))
-	{
-		caiYangWanChengCnt++;
-		if((caiYangWanChengCnt >= 3000) && (TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_WanCheng)))
-		{
-			caiYangWanChengCnt = 0 ;
-			g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_WanCheng - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
-		}	
-	}
-	else if(TRUE == g_T5L.cjyyts[SDWEVoicePrintf_QinFangDai - SDWEVoicePrintf_CaiJi_KaiShi])
-	{
-		if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_QinFangDai))
-		{
-			g_T5L.cjyyts[SDWEVoicePrintf_QinFangDai - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
-		}	
-
+			if(TRUE == screenVoicePrintf_Handle(SDWEVoicePrintf_CaiJi_KaiShi))
+			{
+				g_T5L.cjyyts[SDWEVoicePrintf_CaiJi_KaiShi - SDWEVoicePrintf_CaiJi_KaiShi] = FALSE;
+			}
+		}
 	}
 }
 
@@ -2912,8 +2901,6 @@ void screenSDWe_SubFunctionTest(void)
 		}
 	}
 }
-
-
 
 
 /*******************************************************************************
