@@ -12,6 +12,7 @@
 //==(update:20220609):SDWE reserve
 #define DMG_MIN_DIFF_OF_TWO_SEND_ORDER			(50)//50ms 
 
+#define SDWE_VLU_A55A							(0XA55A)
 //================================================================================================
 
 //==(update:20220609):address of set chanel number : 0->all chanel set  ; (1~8)->single chanel set
@@ -77,7 +78,7 @@
 #define SDWE_GJF_CONTRL_ADDRESS				(0X3503)//管夹阀 开关指令 触发状态跳变 默认=0：管夹阀开 1：管夹阀开
 #define SDWE_RUN_CONTRL_ADDRESS				(0X3504)//运行.暂停 开关指令 触发状态跳变 默认=1：运行 0：暂停
 #define SDWE_ENTER_REALTIME_CONTRL_ADDRESS	(0X3505)//进入实时界面 开关指令 200/300/400
-
+#define SDWE_ENTER_TUANCAI_CONTRL_ADDRESS	(0X3506)//进入团采界面 开关指令
 //
 #define SDWE_YUSHEZHONGLIANG_200_ADDRESS 	(0X3600)//SDWE->MCU
 #define SDWE_YUSHEZHONGLIANG_300_ADDRESS 	(0X3601)//SDWE->MCU
@@ -373,6 +374,7 @@ typedef enum
 	SDWeCurPage_ShiShiJieMian=14,
 	SDWeCurPage_CanShuSetJieMian=15,
 	SDWeCurPage_JiaoZhunJieMianMian=17,
+	SDWeCurPage_TuanCai=19,
 }enumSDWeCurPageType;
 
 
@@ -500,6 +502,7 @@ typedef struct structSdweType
 	UINT16 gjfContrl[SYS_CTL_REG_NUM];				/**< status , gjfContrl event */
 	UINT16 runContrl[SYS_CTL_REG_NUM];				/**< status , runContrl event */
 	UINT16 enterRealTimeSetContrl[SYS_CTL_REG_NUM];	/**< status , enterRealTimeSetContrl event */
+	UINT16 enterTuanCaiContrl[SYS_CTL_REG_NUM];	/**< status , enterTuanCaiContrl event */
 	UINT16 u16_508090SetPercentEvent;				/**< status , u16_508090SetPercentEvent event */
 	UINT16 u16_TriggerStopRock;						/**< status , u16_TriggerStopRock event */
 	
@@ -577,6 +580,7 @@ extern T5LType g_T5L;
 	{0,0},/**< gjfContrl event*/\
 	{0,0},/**< runContrl event*/\
 	{0,0},/**< enterRealTimeSetContrl event */\
+	{0,0},/**< enterTuanCaiContrl event */\
 	FALSE,/**< u16_508090SetPercentEvent event */\
 	FALSE,/**< u16_TriggerStopRock event */\
 	\

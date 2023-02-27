@@ -113,180 +113,109 @@ void app_MotorContrl(void)
 	static UINT8 middleAppear = FALSE , middleAppearDelay = 150;
 	static UINT16 stopMiddleAtStart = TRUE,stopMiddleAtStartCnt=0;
 
+	//==上电3.5秒后 电机停中间
 	if((TRUE == stopMiddleAtStart) && (stopMiddleAtStartCnt++ >= SYS_POWER_REDAY_TIME))
 	{
 		stopMiddleAtStart = FALSE;
 		motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_StopToMiddle;//电机停中间
 	}
 
-	 switch(motorCtl.motorCtrlStatus)
-	 {
+	switch(motorCtl.motorCtrlStatus)
+	{
 		//==================================================================================
 		//                                  《电机不使能》 	   
 		//==================================================================================
-		 case MotorCtrlStatus_DISEN:
-			 motor_pulse_output_set(FALSE);//停止PWM timer 停止PWM 电机停止
-			 motorCtl.runEn = FALSE;
-		 break;
+		case MotorCtrlStatus_DISEN:
+			motor_pulse_output_set(FALSE);//停止PWM timer 停止PWM 电机停止
+			motorCtl.runEn = FALSE;
+		break;
+		//==================================================================================
+		// 								《电机使能》		
+		//==================================================================================
+		case MotorCtrlStatus_EN:
+			motor_pulse_output_set(FALSE);//停止PWM timer 停止PWM 电机停止
+			motorCtl.runEn = TRUE;
+		break;
+		//==================================================================================
+		// 								《电机停止在中间：开始》		
+		//==================================================================================
+		case MotorCtrlStatus_EN_StopToMiddle:
+			motor_pulse_output_set(TRUE);//开始PWM的timer计数
+			motorCtl.runEn = TRUE;
+			motorCtl.runPwmFre = motorCtl.runPwmFreFixed / 6;//以1/6的固定频率转动 找中间限位
+			middleAppear = FALSE;
+			//
+			motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_StopToMiddle1;
+		break;
+		//==================================================================================
+		//								 《电机停止在中间：检测》		 
+		//==================================================================================
+		case MotorCtrlStatus_EN_StopToMiddle1:	  
+			if((FALSE == middleAppear) && (TRUE == pos_EventGet(MOTOR_POS_Middle)))//通过限位开关判断
+			{
+				pos_EventClear(MOTOR_POS_Middle);				  
+				if(SYS_POS_VALUED_1 == pos_FilterGet(MOTOR_POS_Middle))//中间限位
+				{
+					middleAppear = TRUE;
+					middleAppearDelay = 150;
+				}
+			}else if((TRUE == middleAppear) && (--middleAppearDelay == 0))
+			{
+				motorCtl.motorCtrlStatus = MotorCtrlStatus_EN;//电机只使能
+			}
+		break;
+		//==================================================================================
+		//								 《电机左右限位运行：开始》		 
+		//==================================================================================
+		case MotorCtrlStatus_EN_NormalRun_WitMaxPos:
+			motor_pulse_output_set(TRUE);//开始PWM的timer计数
+			motorCtl.runEn = TRUE;
+			motorCtl.runPwmFre = gSystemPara.u32_MotorRockFre;
+			//
+			motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_NormalRun_WitMaxPos1;
+		break;
+		//==================================================================================
+		// 								《电机左右限位运行：执行》 		
+		//==================================================================================
+		case MotorCtrlStatus_EN_NormalRun_WitMaxPos1: 
+			//==实时采集界面
+			if(SDWeCurPage_ShiShiJieMian == g_T5L.curPage)
+			{
+				//==采集到xx% ~100% 且水平位置出现
+				if((GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) >= gSystemPara.u16_fmqkqsj)
+					&& (GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) < 100)	)
+				{
+					motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_StopToMiddle;//电机停中间
+				}				 
+			}
+		break;
+		default:
+		break;
+	}
 
-
-
-		 
-		 //==================================================================================
-		 // 								《电机使能》		
-		 //==================================================================================
-		 case MotorCtrlStatus_EN:
-			 motor_pulse_output_set(FALSE);//停止PWM timer 停止PWM 电机停止
-			 motorCtl.runEn = TRUE;
-		 break;
-		 
-		 
-		 
-		 
-		 //==================================================================================
-		 // 								《电机停止在中间：开始》		
-		 //==================================================================================
-		  case MotorCtrlStatus_EN_StopToMiddle:
-			  motor_pulse_output_set(TRUE);//开始PWM的timer计数
-			  motorCtl.runEn = TRUE;
-			  //motorCtl.runDir = 1;//沿用之前的方向
-			  motorCtl.runPwmFre = motorCtl.runPwmFreFixed / 6;//以1/6的固定频率转动 找中间限位
-			  middleAppear = FALSE;
-			  //
-			  motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_StopToMiddle1;
-		  break;
-		  //==================================================================================
-		  //								 《电机停止在中间：检测》		 
-		  //==================================================================================
-		  case MotorCtrlStatus_EN_StopToMiddle1:	  
-			  if((FALSE == middleAppear) && (TRUE == pos_EventGet(MOTOR_POS_Middle)))//通过限位开关判断
-			  {
-				  pos_EventClear(MOTOR_POS_Middle);				  
-				  if(SYS_POS_VALUED_1 == pos_FilterGet(MOTOR_POS_Middle))//中间限位
-				  {
-				  	 middleAppear = TRUE;
-					 middleAppearDelay = 150;
-				  }
-			  }else if((TRUE == middleAppear) && (--middleAppearDelay == 0))
-			  {
-				 motorCtl.motorCtrlStatus = MotorCtrlStatus_EN;//电机只使能
-			  }
-		  break;
-			  
-			  
-			  
-			  
-		  //==================================================================================
-		  //								 《电机左右限位运行：开始》		 
-		  //==================================================================================
-		 case MotorCtrlStatus_EN_NormalRun_WitMaxPos:
-			 motor_pulse_output_set(TRUE);//开始PWM的timer计数
-			 //
-			 motorCtl.runEn = TRUE;
-		 	 //motorCtl.runDir = 1;//沿用之前的方向
-			 //motorCtl.runPwmFre = motorCtl.runPwmFreFixed;//固定脉冲频率转动
-			 motorCtl.runPwmFre = gSystemPara.u32_MotorRockFre;
-
-			 //
-			 motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_NormalRun_WitMaxPos1;
-		 break;
-		 //==================================================================================
-		 // 								《电机左右限位运行：执行》 		
-		 //==================================================================================
-		 case MotorCtrlStatus_EN_NormalRun_WitMaxPos1: 
-			 //==实时采集界面
-			 if(SDWeCurPage_ShiShiJieMian == g_T5L.curPage)
-			 {
-				 //==采集到xx% ~100% 且水平位置出现
-				 if((GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) >= gSystemPara.u16_fmqkqsj)
-					 && (GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) < 100)
-					 )
-				 {
-					 motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_StopToMiddle;//电机停中间
-				 }				 
-			 }
-		 break;
-			 
-			 
-			 
-			 
-		 //==================================================================================
-		 // 								《电机T形图运行：开始》 		
-		 //==================================================================================
-		 case MotorCtrlStatus_EN_NormalRun_WitTMode:
-			 motor_pulse_output_set(TRUE);//开始PWM的timer计数
-			 //
-			 motorCtl.runEn = TRUE;
-		 	 //motorCtl.runDir = 1;//沿用之前的方向
-			 motorCtl.runPwmFre = 50;//固定脉冲频率50HZ转动
-			 // 
-			 motorCtl.curStep_Ms = 0;
-			 motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_NormalRun_WitTMode1;
-		 
-		 break;
-		 //==================================================================================
-		 // 								《电机T形图运行：执行》 		
-		 //==================================================================================
-		 case MotorCtrlStatus_EN_NormalRun_WitTMode1:
-			 motorCtl.curStep_Ms++;
-			 //计算每 ms 的PWM频率
-			 if(motorCtl.curStep_Ms <= motorCtl.tAB)
-			 {
-				 motorCtl.runPwmFre = 1000 * (motorCtl.kAB*motorCtl.curStep_Ms + motorCtl.bAB);
-			 }
-			 else if((motorCtl.curStep_Ms > motorCtl.tAB) && (motorCtl.curStep_Ms <= (motorCtl.tAB + motorCtl.tBC_t_pulse[0][2])))
-			 {
-				motorCtl.runPwmFre = 1000 * motorCtl.tBC_t_pulse[0][1];
-			 }
-			 else if((motorCtl.curStep_Ms > (motorCtl.tAB + motorCtl.tBC_t_pulse[0][2])) && (motorCtl.curStep_Ms <=  motorCtl.tAC))
-			 {
-			   motorCtl.runPwmFre = 1000 * motorCtl.tBC_t_pulse[1][1];
-			 }
-			 else if((motorCtl.curStep_Ms > motorCtl.tAC) && (motorCtl.curStep_Ms <= motorCtl.tAD))
-			 {
-				 motorCtl.runPwmFre = 1000 * (motorCtl.kCD*motorCtl.curStep_Ms + motorCtl.bCD);
-			 }else if(motorCtl.curStep_Ms >= motorCtl.tAD)//T形图 走到最大时间 就反向
-			 {
-				 motorCtl.curStep_Ms = 0 ;
-				 motorCtl.runDir = ~(motorCtl.runDir);
-			 } 
-		 break;
-			 
-			 
-			 
-			 
-		 default:
-		 break;
-	 }
- 
- 
-
-	 //==================================================================================
-	 //1.左限位开关检测时： 反向 ，清零curStep_Ms
-	 //2.右限位开关检测时： 反向 ，清零curStep_Ms
-	 //3.周期设置驱动器         ：  使能 ，方向 ，脉冲频率
-	 //==================================================================================
-	 if(TRUE == pos_EventGet(MOTOR_POS_Left))//左限位开关事件获取
-	 {
-		 pos_EventClear(MOTOR_POS_Left);
-		 if(SYS_POS_VALUED == pos_FilterGet(MOTOR_POS_Left))//左限位：有效
-		 {	 
-			 motorCtl.runDir = 0;//立即反向
-			 motorCtl.curStep_Ms = 0 ;
-		 }
-	 }
-	 else if(TRUE == pos_EventGet(MOTOR_POS_Right))//右限位开关事件获取
-	 {
-		 pos_EventClear(MOTOR_POS_Right);
-		 if(SYS_POS_VALUED == pos_FilterGet(MOTOR_POS_Right))//右限位：有效
-		 {	 
-			 motorCtl.runDir = 1;//立即反向
-			 motorCtl.curStep_Ms = 0 ;
-		 }
-	 }
-	 motor_PulseHandle(motorCtl.runEn,motorCtl.runDir,motorCtl.runPwmFre,0);
-
-
-	 
+	//==================================================================================
+	//1.左限位开关检测时	： 反向 ，清零curStep_Ms
+	//2.右限位开关检测时	： 反向 ，清零curStep_Ms
+	//3.周期设置驱动器		: 使能 ，方向 ，脉冲频率
+	//==================================================================================
+	if(TRUE == pos_EventGet(MOTOR_POS_Left))//左限位开关事件获取
+	{
+		pos_EventClear(MOTOR_POS_Left);
+		if(SYS_POS_VALUED == pos_FilterGet(MOTOR_POS_Left))//左限位：有效
+		{	 
+			motorCtl.runDir = 0;//立即反向
+			motorCtl.curStep_Ms = 0 ;
+		}
+	}
+	else if(TRUE == pos_EventGet(MOTOR_POS_Right))//右限位开关事件获取
+	{
+		pos_EventClear(MOTOR_POS_Right);
+		if(SYS_POS_VALUED == pos_FilterGet(MOTOR_POS_Right))//右限位：有效
+		{	 
+			motorCtl.runDir = 1;//立即反向
+			motorCtl.curStep_Ms = 0 ;
+		}
+	}
+	motor_PulseHandle(motorCtl.runEn,motorCtl.runDir,motorCtl.runPwmFre,0); 
 }
  

@@ -1101,7 +1101,13 @@ UINT8 sdweAskVaribleData(UINT16 varAdd, UINT16 varData)
 		{
 			g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_STATUS_INDEX] = pSdwe->SetData;
 			g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
-		}else if(SDWE_RTC_TIME_SET_HH_ADDRESS == pSdwe->SetAdd)
+		}
+		else if(SDWE_ENTER_TUANCAI_CONTRL_ADDRESS == pSdwe->SetAdd)
+		{
+			g_T5L.enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX] = pSdwe->SetData;
+			g_T5L.enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
+		}		
+		else if(SDWE_RTC_TIME_SET_HH_ADDRESS == pSdwe->SetAdd)
 		{	
 			g_T5L.rtcSetTime[RTC_TIME_HH_OFFSET] = pSdwe->SetData%24;
 			g_T5L.rtcSetTime[RTC_TIME_MM_OFFSET] = g_T5L.rtcTime[RTC_TIME_MM_OFFSET];
@@ -2128,7 +2134,67 @@ void screenSDWe_TakeDownCheck(UINT16 congJi_LiuSu_CheckPoint)
 	}
 }
 
+//======团采模式控制 diff扫描时间间隔
+void screenSDWe_TuanCaiHandle(UINT32 tuanCai_time)
+{
+	//团采运行 相关变量
+	static UINT32 run_start_cnt = 0 ;
+	//团采停止 相关变量
+	static UINT32 run_stop_cnt = 0 ;
+	//团采电机运行状态
+	static UINT32 motor_cycle_run_status = 0 ;
 
+	if(SDWeCurPage_TuanCai == g_T5L.curPage)
+	{
+		//run:当当前重量超过 设定重量 gSystemPara.u32_YaoBaiVlu_TuanCai
+		if(gSystemPara.u32_YaoBaiVlu_TuanCai <= GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT))
+		{
+			run_start_cnt++;
+		}
+		else if(run_start_cnt > 0)
+		{
+			run_start_cnt--;
+		}
+		//run:且时间超过 设定时间 gSystemPara.u32_YaoBaiVlu_TuanCai
+		if(run_start_cnt >= tuanCai_time*1000)
+		{
+			run_start_cnt = tuanCai_time*1000;
+			if(0 == motor_cycle_run_status)
+			{
+				//设置电机控制进入限位开关控制
+				app_SetMotorContrlMode(MotorCtrlStatus_EN_NormalRun_WitMaxPos);
+				motor_cycle_run_status = 1;
+			}
+		}
+
+		//stop:当当前重量小于零点范围 设定重量 gSystemPara.zeroRange
+		if(gSystemPara.zeroRange >= GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT))
+		{
+			run_stop_cnt++;
+		}
+		else if(run_stop_cnt > 0)
+		{
+			run_stop_cnt--;
+		}
+		//stop:且时间超过 设定时间的一半
+		if(run_stop_cnt >= tuanCai_time*500)
+		{
+			run_stop_cnt = tuanCai_time*500;
+			if(1 == motor_cycle_run_status)
+			{
+				//设置电机控制进入停中间控制
+				app_SetMotorContrlMode(MotorCtrlStatus_EN_StopToMiddle);
+				motor_cycle_run_status = 0;
+			}
+		}
+	}
+	else
+	{
+		run_start_cnt = 0 ;
+		run_stop_cnt = 0 ;
+		motor_cycle_run_status = 0 ;
+	}
+}
 
 //======采集重量 周期发送数据 给屏
 void screenSDWe_CycleDataSend(UINT16 cycle)
@@ -2401,6 +2467,59 @@ UINT8 backReturnASetContrl_Handle(UINT16 eventVlu)
 	//
 	return ret;
 }
+
+//======事件处理：开始界面 按下 团才模式 checked:20230227
+UINT8 enterTuanCaiContrl_Handle(UINT16 eventVlu)
+{
+	UINT8 ret = FALSE;
+	static UINT8 status = 0;
+	(void)eventVlu;
+	switch(status)
+	{
+		case 0://条件判断
+			status =1;
+		break;
+		
+		case 1://数据准备 及发送
+			status = 2;		
+		break;
+		
+		case 2://页面切换
+			if(TRUE == screenSDWe_JumpToPage(SDWeCurPage_TuanCai))
+			{
+				g_T5L.curPage = SDWeCurPage_TuanCai;
+				status = 3;
+			}
+		break;
+
+		case 3://推出实时采集界面：数据整理
+			//电机停水平
+			app_SetMotorContrlMode(MotorCtrlStatus_EN_StopToMiddle);//返回主界面 选择200/300/400时 电机 停在水平	
+			status = 4;
+		break;
+		
+		case 4://数据准备 及发送
+			if(TRUE == screenSDWeWriteVarible(SDWE_CYCLE_DATA_START_ADDRESS,(UINT16 *)GET_SDWE_CUR_CYCLE_DATA_PTR(),SDWE_CYCLE_DATA_STATUS_MAX,SDWE_CRC16_EN))
+			{
+				status = 0;
+				ret = TRUE;
+			}
+		break;
+		default:
+			status = 0 ;
+		break;
+	}
+
+	//
+	if(ret == TRUE)
+	{
+		status = 0 ;
+	}
+	//
+	return ret;
+}
+
+
 
 
 //======事件处理：按下设置返回B checked:20220526
@@ -3082,6 +3201,24 @@ void screenSDWe_TxFunction(void)
 					pScreen->backReturnASetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_INVALID;
 				}
 			}
+			//20230227
+			//开始界面 + "按下"团采模式  enterTuanCaiContrl
+			else if((SDWeCurPage_KaiShiJieMian == pScreen->curPage) && 
+					(SYS_CTL_EVENT_VALID == pScreen->enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX]) )
+			{
+				if(SDWE_VLU_A55A == pScreen->enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX])
+				{
+					if(TRUE == enterTuanCaiContrl_Handle(pScreen->enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX]))
+					{
+						pScreen->enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX] = 0XFFFF;
+						pScreen->enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_INVALID;
+					}
+				}
+				else
+				{
+					pScreen->enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_INVALID;
+				}
+			}
 			//B按键事件处理：{设置 返回 退出}
 			//实时采集界面：长按开始/暂停按键
 			else if((SDWeCurPage_ShiShiJieMian == pScreen->curPage) &&
@@ -3457,5 +3594,8 @@ void sreenSDWe_MainFunction(void)
 
 		//==实时界面 拿下 放回 处理
 		screenSDWe_TakeDownCheck(2000);//2000ml/min = 
+
+		//==团采模式下 电机控制
+		screenSDWe_TuanCaiHandle(gSystemPara.u32_YaoBaiTime_TuanCai);
 	}
 }
