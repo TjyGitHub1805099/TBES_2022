@@ -1101,7 +1101,13 @@ UINT8 sdweAskVaribleData(UINT16 varAdd, UINT16 varData)
 		{
 			g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_STATUS_INDEX] = pSdwe->SetData;
 			g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
-		}else if(SDWE_RTC_TIME_SET_HH_ADDRESS == pSdwe->SetAdd)
+		}
+		else if(SDWE_ENTER_TUANCAI_CONTRL_ADDRESS == pSdwe->SetAdd)
+		{
+			g_T5L.enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX] = pSdwe->SetData;
+			g_T5L.enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
+		}		
+		else if(SDWE_RTC_TIME_SET_HH_ADDRESS == pSdwe->SetAdd)
 		{	
 			g_T5L.rtcSetTime[RTC_TIME_HH_OFFSET] = pSdwe->SetData%24;
 			g_T5L.rtcSetTime[RTC_TIME_MM_OFFSET] = g_T5L.rtcTime[RTC_TIME_MM_OFFSET];
@@ -1151,19 +1157,16 @@ UINT8 sdweAskVaribleData(UINT16 varAdd, UINT16 varData)
 		}
 		else if(SDWE_LIUSU_WINDOWN_RANGE_ADDRESS == pSdwe->SetAdd)
 		{
-			motorCtl.tAD = pSdwe->SetData;
 			gSystemPara.u32_LiuSu_Window = pSdwe->SetData;
 			needStore |= DMG_TRIGER_SAVE_SECOTOR_2 ;
 		}
 		else if(SDWE_TUANCAI_YAOBAI_VLU_RANGE_ADDRESS == pSdwe->SetAdd)
 		{
-			motorCtl.tAD = pSdwe->SetData;
 			gSystemPara.u32_YaoBaiVlu_TuanCai = pSdwe->SetData;
 			needStore |= DMG_TRIGER_SAVE_SECOTOR_2 ;
 		}
 		else if(SDWE_TUANCAI_YAOBAI_TIME_RANGE_ADDRESS == pSdwe->SetAdd)
 		{
-			motorCtl.tAD = pSdwe->SetData;
 			gSystemPara.u32_YaoBaiTime_TuanCai = pSdwe->SetData;
 			needStore |= DMG_TRIGER_SAVE_SECOTOR_2 ;
 		}
@@ -2014,26 +2017,33 @@ void screenSDWe_LiuSuErrorCaculate(UINT16 liusu)
 void screenSDWe_LiuSuCaculate(UINT32 cycleAvg,UINT32 cycleCur)
 {
 	static UINT32 tervalVelocity_PreWeight = 0 ;//区间测速
-	if((SDWeCurPage_ShiShiJieMian == g_T5L.curPage) && (FALSE == g_T5L.sampleComplete))
+	static UINT32 u32_tickOfLiuSuCaculate = 0 ;
+	//para in check
+	if((0 == cycleAvg) || (0 == cycleCur))
 	{
-		if(0 != cycleAvg)//间隔 cycleAvg 计算平均流速
+		//error para ,doing nothing
+	}
+	else
+	{
+		//单位：g/s = 60g/mim
+		if(	(SDWeCurPage_ShiShiJieMian == g_T5L.curPage) && //实时界面
+			(FALSE == g_T5L.sampleComplete) && //采样未完成
+			(SDWeZhanTingYuXing_ZhanTing == GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_ZT_YX)))// /暂停/运行控键 = 暂停（代表正在运行）
 		{
-			if(0 == (g_sys_ms_tick % cycleAvg ))
+			u32_tickOfLiuSuCaculate++;
+			//计算：采样 整体期间的平均值
+			if(0 == (u32_tickOfLiuSuCaculate % cycleAvg ))
 			{
-				if(0 != g_T5L.rtcTimeSample_ms)
+				if(0 != g_T5L.rtcTimeSample_ms)//采样界面 且 非暂停时 此值++
 				{
 					g_T5L.liusuAvg = 0 ;
 					g_T5L.liusuAvg = GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT);
 					g_T5L.liusuAvg *= 60000;//单位：ml/min
 					g_T5L.liusuAvg /= g_T5L.rtcTimeSample_ms;
-					//
-					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_LIUSU,g_T5L.liusuAvg);
 				}
 			}
-		}
-		if(0 != cycleCur)//间隔 cycleCur 计算瞬时流速
-		{
-			if(0 == (g_sys_ms_tick % cycleCur ))
+			//计算：采样 间隔期间的平均值
+			if(0 == (u32_tickOfLiuSuCaculate % cycleCur ))
 			{
 				g_T5L.liusuCur = 0 ;
 				g_T5L.liusuCur = GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT) - tervalVelocity_PreWeight;
@@ -2045,24 +2055,19 @@ void screenSDWe_LiuSuCaculate(UINT32 cycleAvg,UINT32 cycleCur)
 				
 				//记录前几秒的重量
 				tervalVelocity_PreWeight = GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT);
-			}
+			}				
 		}
-	}
-	else
-	{
-		g_T5L.liusuCur = 0 ;
-		g_T5L.liusuAvg = 0 ;
-		tervalVelocity_PreWeight = GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT);
-	}
+		else
+		{
+			u32_tickOfLiuSuCaculate = 0 ;
+			g_T5L.liusuCur = 0 ;
+			g_T5L.liusuAvg = 0 ;
+			tervalVelocity_PreWeight = GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT);
+		}
 
-	//暂停时：流速显示0
-	if((SDWeCurPage_ShiShiJieMian == g_T5L.curPage) &&
-		(SDWeZhanTingYuXing_YunXing == GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_ZT_YX)))
-	{
-		g_T5L.liusuCur = 0 ;
-		g_T5L.liusuAvg = 0 ;
+		//刷新"流速"
+		SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_LIUSU,g_T5L.liusuAvg);
 	}
-	SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_LIUSU,g_T5L.liusuAvg);
 }
 
 
@@ -2128,7 +2133,96 @@ void screenSDWe_TakeDownCheck(UINT16 congJi_LiuSu_CheckPoint)
 	}
 }
 
+//======常规模式控制
+void screenSDWe_ShiShiPage_MotorAutoStopHandle(void)
+{
+	static UINT8 MotorAutoStopTriger = 0;
+	static UINT8 MotorAutoRunTriger = 0;
+	if(SDWeCurPage_ShiShiJieMian == g_T5L.curPage)
+	{
+		//达到精测点 电机停中间
+		if((0 == MotorAutoStopTriger) && 
+		    (GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) >= gSystemPara.u16_fmqkqsj) && 
+			(GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) < 100))
+		{
+			app_SetMotorContrlMode(MotorCtrlStatus_EN_StopToMiddle);
+			MotorAutoStopTriger = 1;//已经触发电机停中间
+			MotorAutoRunTriger = 0 ;
+		}
+		if((0 == MotorAutoRunTriger) && (GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT) >= 100))
+		{
+			app_SetMotorContrlMode(MotorCtrlStatus_EN_NormalRun_WitMaxPos);
+			MotorAutoRunTriger = 1;//已经触发电机运行
+		}
+	}
+	else
+	{
+		MotorAutoStopTriger = 0 ;
+		MotorAutoRunTriger = 0 ;
+	}
+}
 
+//======团采模式控制 diff扫描时间间隔
+void screenSDWe_TuanCaiHandle(UINT32 tuanCai_time)
+{
+	//团采运行 相关变量
+	static UINT32 run_start_cnt = 0 ;
+	//团采停止 相关变量
+	static UINT32 run_stop_cnt = 0 ;
+	//团采电机运行状态
+	static UINT32 motor_cycle_run_status = 0 ;
+
+	if(SDWeCurPage_TuanCai == g_T5L.curPage)
+	{
+		//run:当当前重量超过 设定重量 gSystemPara.u32_YaoBaiVlu_TuanCai
+		if(gSystemPara.u32_YaoBaiVlu_TuanCai <= GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_TOTAL_WEIGHT))
+		{
+			run_start_cnt++;
+		}
+		else if(run_start_cnt > 0)
+		{
+			run_start_cnt--;
+		}
+		//run:且时间超过 设定时间 gSystemPara.u32_YaoBaiVlu_TuanCai
+		if((0 != tuanCai_time)&&(run_start_cnt >= tuanCai_time*1000))
+		{
+			run_start_cnt = tuanCai_time*1000;
+			if(0 == motor_cycle_run_status)
+			{
+				//设置电机控制进入限位开关控制
+				app_SetMotorContrlMode(MotorCtrlStatus_EN_NormalRun_WitMaxPos);
+				motor_cycle_run_status = 1;
+			}
+		}
+
+		//stop:当当前重量小于零点范围 设定重量 gSystemPara.zeroRange
+		if(gSystemPara.zeroRange >= GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_TOTAL_WEIGHT))
+		{
+			run_stop_cnt++;
+		}
+		else if(run_stop_cnt > 0)
+		{
+			run_stop_cnt--;
+		}
+		//stop:且时间超过 设定时间的一半
+		if((0 != tuanCai_time)&&(run_stop_cnt >= 500))//拿下来500ms后就停
+		{
+			run_stop_cnt = 500;
+			if(1 == motor_cycle_run_status)
+			{
+				//设置电机控制进入停中间控制
+				app_SetMotorContrlMode(MotorCtrlStatus_EN_StopToMiddle);
+				motor_cycle_run_status = 0;
+			}
+		}
+	}
+	else
+	{
+		run_start_cnt = 0 ;
+		run_stop_cnt = 0 ;
+		motor_cycle_run_status = 0 ;
+	}
+}
 
 //======采集重量 周期发送数据 给屏
 void screenSDWe_CycleDataSend(UINT16 cycle)
@@ -2401,6 +2495,59 @@ UINT8 backReturnASetContrl_Handle(UINT16 eventVlu)
 	//
 	return ret;
 }
+
+//======事件处理：开始界面 按下 团才模式 checked:20230227
+UINT8 enterTuanCaiContrl_Handle(UINT16 eventVlu)
+{
+	UINT8 ret = FALSE;
+	static UINT8 status = 0;
+	(void)eventVlu;
+	switch(status)
+	{
+		case 0://条件判断
+			status =1;
+		break;
+		
+		case 1://数据准备 及发送
+			status = 2;		
+		break;
+		
+		case 2://页面切换
+			if(TRUE == screenSDWe_JumpToPage(SDWeCurPage_TuanCai))
+			{
+				g_T5L.curPage = SDWeCurPage_TuanCai;
+				status = 3;
+			}
+		break;
+
+		case 3://推出实时采集界面：数据整理
+			//电机停水平
+			app_SetMotorContrlMode(MotorCtrlStatus_EN_StopToMiddle);//返回主界面 选择200/300/400时 电机 停在水平	
+			status = 4;
+		break;
+		
+		case 4://数据准备 及发送
+			if(TRUE == screenSDWeWriteVarible(SDWE_CYCLE_DATA_START_ADDRESS,(UINT16 *)GET_SDWE_CUR_CYCLE_DATA_PTR(),SDWE_CYCLE_DATA_STATUS_MAX,SDWE_CRC16_EN))
+			{
+				status = 0;
+				ret = TRUE;
+			}
+		break;
+		default:
+			status = 0 ;
+		break;
+	}
+
+	//
+	if(ret == TRUE)
+	{
+		status = 0 ;
+	}
+	//
+	return ret;
+}
+
+
 
 
 //======事件处理：按下设置返回B checked:20220526
@@ -3048,7 +3195,9 @@ void screenSDWe_TxFunction(void)
 		//实时处理	
 		case SDWeCtlStep_CycleHandle:
 			//采集界面时 采集完成 点击触摸屏上的百分比按钮 -> 电机暂停/运行 来回切换
-			if((TRUE == g_T5L.u16_TriggerStopRock) && (SDWeCurPage_ShiShiJieMian == g_T5L.curPage) && (TRUE == g_T5L.sampleComplete))
+			if((TRUE == g_T5L.u16_TriggerStopRock) && 
+				(((SDWeCurPage_ShiShiJieMian == g_T5L.curPage) && (TRUE == g_T5L.sampleComplete)) ||
+				(SDWeCurPage_TuanCai == g_T5L.curPage)))
 			{
 				if(FALSE == s_u16_TriggerStopRock)
 				{
@@ -3082,11 +3231,31 @@ void screenSDWe_TxFunction(void)
 					pScreen->backReturnASetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_INVALID;
 				}
 			}
+			//20230227
+			//开始界面 + "按下"团采模式  enterTuanCaiContrl
+			else if((SDWeCurPage_KaiShiJieMian == pScreen->curPage) && 
+					(SYS_CTL_EVENT_VALID == pScreen->enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX]) )
+			{
+				if(SDWE_VLU_A55A == pScreen->enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX])
+				{
+					if(TRUE == enterTuanCaiContrl_Handle(pScreen->enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX]))
+					{
+						pScreen->enterTuanCaiContrl[SYS_CTL_REG_STATUS_INDEX] = 0XFFFF;
+						pScreen->enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_INVALID;
+					}
+				}
+				else
+				{
+					pScreen->enterTuanCaiContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_INVALID;
+				}
+			}
 			//B按键事件处理：{设置 返回 退出}
 			//实时采集界面：长按开始/暂停按键
-			else if((SDWeCurPage_ShiShiJieMian == pScreen->curPage) &&
-				    ((SYS_CTL_EVENT_VALID == pScreen->backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX]) || 
-				      (TRUE == key_LongPressEventGet(TBES_START_MODLE_CHOICE))))
+						//else if(((SDWeCurPage_ShiShiJieMian == pScreen->curPage) || (SDWeCurPage_TuanCai == pScreen->curPage)) &&
+				    //((SYS_CTL_EVENT_VALID == pScreen->backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX]) || 
+				      //(TRUE == key_LongPressEventGet(TBES_START_MODLE_CHOICE))))
+			else if((SYS_CTL_EVENT_VALID == pScreen->backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX]) || 
+				      (TRUE == key_LongPressEventGet(TBES_START_MODLE_CHOICE)))
 			{
 				if(TRUE == backReturnBSetContrl_Handle(pScreen->backReturnBSetContrl[SYS_CTL_REG_STATUS_INDEX]))
 				{
@@ -3457,5 +3626,11 @@ void sreenSDWe_MainFunction(void)
 
 		//==实时界面 拿下 放回 处理
 		screenSDWe_TakeDownCheck(2000);//2000ml/min = 
+
+		//==团采模式下 电机控制
+		screenSDWe_TuanCaiHandle(gSystemPara.u32_YaoBaiTime_TuanCai);
+
+		//==实时模式下 电机控制
+		screenSDWe_ShiShiPage_MotorAutoStopHandle();
 	}
 }

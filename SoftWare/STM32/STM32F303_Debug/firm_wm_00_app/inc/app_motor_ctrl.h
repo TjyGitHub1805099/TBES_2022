@@ -21,6 +21,9 @@ typedef enum
 typedef struct structMotorContrlType
 {
 	enumMotorCtrlStatusType motorCtrlStatus;
+	enumMotorCtrlStatusType motorCurStatus;
+
+	UINT8 middleAppear;
 
 	UINT8 findStatus;
 
@@ -60,6 +63,8 @@ typedef struct structMotorContrlType
 
 #define MotorContrlDefault   { \
 	MotorCtrlStatus_DISEN,\
+	MotorCtrlStatus_DISEN,\
+	0,\
 	0,\
 	13.7641,\
 	10000,\
