@@ -110,7 +110,7 @@ void app_gjf_handle(enumSDWeFaKaiFaGuanType status)
   ******************************************************************************/
 void app_MotorContrl(void)
 {
-	static UINT8 middleAppearDelay = 150;
+	static UINT8 middleAppearDelay = 0;
 	static UINT16 stopMiddleAtStart = TRUE,stopMiddleAtStartCnt=0;
 
 	//==上电3.5秒后 电机停中间
@@ -118,6 +118,8 @@ void app_MotorContrl(void)
 	{
 		stopMiddleAtStart = FALSE;
 		motorCtl.motorCtrlStatus = MotorCtrlStatus_EN_StopToMiddle;//电机停中间
+		motorCtl.middleAppear = FALSE;
+		pos_EventClear(MOTOR_POS_Middle);
 	}
 
 	switch(motorCtl.motorCtrlStatus)

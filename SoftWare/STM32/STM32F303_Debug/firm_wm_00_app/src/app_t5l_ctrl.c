@@ -3251,9 +3251,6 @@ void screenSDWe_TxFunction(void)
 			}
 			//B按键事件处理：{设置 返回 退出}
 			//实时采集界面：长按开始/暂停按键
-						//else if(((SDWeCurPage_ShiShiJieMian == pScreen->curPage) || (SDWeCurPage_TuanCai == pScreen->curPage)) &&
-				    //((SYS_CTL_EVENT_VALID == pScreen->backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX]) || 
-				      //(TRUE == key_LongPressEventGet(TBES_START_MODLE_CHOICE))))
 			else if((SYS_CTL_EVENT_VALID == pScreen->backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX]) || 
 				      (TRUE == key_LongPressEventGet(TBES_START_MODLE_CHOICE)))
 			{
