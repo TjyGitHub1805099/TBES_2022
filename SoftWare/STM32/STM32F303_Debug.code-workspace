@@ -4,5 +4,10 @@
 			"path": "STM32F303_Debug"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"app_main_task.h": "c",
+			"app_motor_ctrl.h": "c"
+		}
+	}
 }
