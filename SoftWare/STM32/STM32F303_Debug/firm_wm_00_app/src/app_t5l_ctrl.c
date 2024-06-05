@@ -2333,14 +2333,12 @@ void screenSDWe_CycleDataSend(UINT16 cycle)
 	//计算当前总重量 单位：ml
 	if(gSystemPara.u16_ml_g_bilv !=0 )
 	{
-		SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_TOTAL_WEIGHT,(weight *1000 / gSystemPara.u16_ml_g_bilv));
-		SET_SDWE_CUR_WEIGHT_DATA((weight *1000 / gSystemPara.u16_ml_g_bilv));
+		weight *=1000;
+		weight /= gSystemPara.u16_ml_g_bilv;
 	}
-	else
-	{
-		SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_TOTAL_WEIGHT,weight);
-		SET_SDWE_CUR_WEIGHT_DATA(weight);
-	}
+	weight += 0.5f;//加权 取整
+
+	SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_TOTAL_WEIGHT,weight);
 
 	//实时采集页面 计算百分比等
 	if(SDWeCurPage_ShiShiJieMian == g_T5L.curPage)

@@ -532,8 +532,6 @@ typedef struct structSdweType
 	//采集完成标志
 	UINT8 sampleComplete;/*< 采集完成标志 */
 
-	float weight;
-
 	UINT32 liusuSlowWarnDelay;/*< 持续流速低时报警间隔 */
 	UINT8 liusuSlowWarnPrintf;/*< 持续流速低已播报 */
 }T5LType;
@@ -610,7 +608,6 @@ extern T5LType g_T5L;
 	\
 	FALSE,/*< 采集完成标志 */\
 	\
-	0.0f,\
 	0,\
 	0,\
 	}
@@ -642,10 +639,6 @@ extern T5LType g_T5L;
 #define GET_SDWE_PRE_CYCLE_DATA_PTR()	(GET_SDWE_CYCLE_DATA_PTR()[SDWE_CYCLE_DATA_ARR_INDEX_PRE])
 #define GET_SDWE_PRE_CYCLE_DATA(index)	GET_SDWE_PRE_CYCLE_DATA_PTR()[index]
 #define SET_SDWE_PRE_CYCLE_DATA(index,data)	(GET_SDWE_PRE_CYCLE_DATA_PTR()[index] = data)
-
-
-#define GET_SDWE_CUR_WEIGHT_DATA()	(g_T5L.weight)
-#define SET_SDWE_CUR_WEIGHT_DATA(data)	(g_T5L.weight = data)
 
 #define REAL_TIME_DATA_SEND_CYCLE		(500)//500ms
 
