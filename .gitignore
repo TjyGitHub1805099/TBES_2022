@@ -1,0 +1,9 @@
+#忽略所有SoftWare/STM32下的Objects
+#但是不忽略*.lib *.map *.hex
+SoftWare/STM32/**/STM32F303DriverLib/Objects/*
+SoftWare/STM32/**/firm_wm_00_hal/Objects/*
+SoftWare/STM32/**/firm_wm_00_app/Objects/*
+!SoftWare/STM32/**/STM32F303DriverLib/Objects/*.lib
+!SoftWare/STM32/**/firm_wm_00_hal/Objects/*.lib
+!SoftWare/STM32/**/firm_wm_00_app/Objects/*.hex
+

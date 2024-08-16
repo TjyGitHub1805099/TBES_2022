@@ -104,11 +104,19 @@
 #define SDWE_FAST_WARN_FILTER_TIME_ADDRESS 		(0X3613)//SDWE->MCU 快速滤波时间
 #define SDWE_SLOW_WARN_FILTER_TIME_ADDRESS 		(0X3614)//SDWE->MCU 慢速滤波时间
 
+//add at 20240816
+#define SDWE_CAIJIWANCHENGSHENGGUANGKONGEN_ADDRESS		(0X3615)//SDWE->MCU 采集完成声光控使能
+#define SDWE_CAIJIWANCHENGBOBAOCISHU_ADDRESS 			(0X3616)//SDWE->MCU 采集完成播报次数
+#define SDWE_CAIJIWANCHENGBOBAOJIANGESHIJIAN_ADDRESS 	(0X3617)//SDWE->MCU 采集完成播报间隔时间
+#define SDWE_CAIJIWANCHENGYAOBAOKAIGUAN_ADDRESS 		(0X3618)//SDWE->MCU 采集完成摇摆开关
+#define SDWE_LIUSUYICHANGBOBAOLEIXING_ADDRESS 			(0X3619)//SDWE->MCU 流速异常播报类型
+
+
 //==是否开启管夹阀功能
 #define SDWE_GUANJIAFAGONGNENGKAIQI_EN		(1)
 
 //==硬件 主控 屏幕版本信息
-#define SDWE_VERSION_ADDRERSS				(0X3700)
+#define SDWE_VERSION_ADDRERSS				(0X3700)//3700~3702
 #define SDWE_VERSION_LENGTH					(3)
 
 
@@ -364,6 +372,7 @@ typedef enum
 	SDWE_CYCLE_DATA_STATUS_FJS_B=14,
 	SDWE_CYCLE_DATA_STATUS_FK_FG=15,
 	SDWE_CYCLE_DATA_STATUS_ZT_YX=16,
+	SDWE_CYCLE_DATA_STATUS_CAIJIWANCHENG=17,
 	SDWE_CYCLE_DATA_STATUS_MAX
 }enumSDWeCycleDataType;
 
@@ -400,6 +409,22 @@ typedef enum
 	SDWeZhanTingYuXing_ZhanTing=0,
 	SDWeZhanTingYuXing_YunXing=1,
 }enumSDWeZhanTingYuXingType;
+
+typedef enum
+{
+	SDWeCaiJiWanCheng_KongBai=0,
+	SDWeCaiJiWanCheng_WanCheng=1,
+	SDWeCaiJiWanCheng_LiuSuGuoKuai=2,
+	SDWeCaiJiWanCheng_LiuSuGuoMan=3,
+}enumSDWeCaiJiWanChengType;
+
+typedef enum
+{
+	SDWeLiuSuYiChangHandle_None=0,
+	SDWeLiuSuYiChangHandle_YuYin=1,
+	SDWeLiuSuYiChangHandle_PingShan=2,
+	SDWeLiuSuYiChangHandle_YuYinPingShan=3,
+}enumSDWeLiuSuYiChangHandleType;
 
 typedef enum
 {
@@ -528,6 +553,7 @@ typedef struct structSdweType
 	INT32 liusuAvg;/*< 平均流速 */
 	INT32 liusuCur;/*< 当前流速 */
 	UINT8 liusuError;/*< 流速异常 */
+	UINT8 liusuErrorCycleHandle;/*< 流速异常周期处理 */
 
 	//采集完成标志
 	UINT8 sampleComplete;/*< 采集完成标志 */
@@ -605,6 +631,7 @@ extern T5LType g_T5L;
 	0,/**< 平均流速*/\
 	0,/**< 当前流速*/\
 	FALSE,/*< 流速异常 */\
+	FALSE,/*< 流速异常周期处理 */\
 	\
 	FALSE,/*< 采集完成标志 */\
 	\
