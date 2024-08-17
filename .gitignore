@@ -6,4 +6,3 @@ SoftWare/STM32/**/firm_wm_00_app/Objects/*
 !SoftWare/STM32/**/STM32F303DriverLib/Objects/*.lib
 !SoftWare/STM32/**/firm_wm_00_hal/Objects/*.lib
 !SoftWare/STM32/**/firm_wm_00_app/Objects/*.hex
-!firmware_wm_00_app.hex
