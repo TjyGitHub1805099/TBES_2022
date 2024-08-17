@@ -3908,7 +3908,7 @@ void sreenSDWe_MainFunction(void)
 		screenSDWe_RxFunction();
 		
 		//prepare data and send to SDWe
-		//screenSDWe_TxFunction();
+		screenSDWe_TxFunction();
 		
 		//流速计算 3秒计算一次平均流速（此值用于报警） 1秒计算一次实时流速 
 		screenSDWe_LiuSuCaculate(1000,gSystemPara.u32_FastWarnFilterTime,gSystemPara.u32_SlowWarnFilterTime);
