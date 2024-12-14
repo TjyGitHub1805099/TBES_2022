@@ -3178,7 +3178,7 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 			case 0x10://空袋满足：切页面
 				if(TRUE == screenSDWe_JumpToPage(gotoPage))
 				{
-					g_T5L.curPage = gotoPage;
+					g_T5L.curPage = (enumSDWeCurPageType)gotoPage;
 					status = 0;
 					ret = TRUE;
 				}
