@@ -1,0 +1,1 @@
+若VT_SET文件夹下存在CheckSum.bin文件，请删除CheckSum.bin文件后再拷贝VT_SET至U盘根目录，进行烧录。
