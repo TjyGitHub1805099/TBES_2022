@@ -19,23 +19,22 @@
 #define SYS_SCREEN_BOOT_ANIMATION_DELAY	(60)
 
 #define HW_VERSION			(127)//address = 0x3700 ,2022.01.27
-#define MCU_VERSION			(1214)//address = 0x3704 ,2024.12.14 //异常时拿下袋子 不播报异常 修改300档位
-#define DIWEN_VERSION		(817)//address = 0x3702 ,2024.08.17
+#define MCU_VERSION			(1215)//address = 0x3704 ,2024.12.15 //异常时拿下袋子 不播报异常 对策南京 修改300档位为自定义
+#define DIWEN_VERSION		(1214)//address = 0x3702 ,2024.12.14
 
-//#define MCU_VERSION			(605)//address = 0x3704 ,2024.06.05
-//#define DIWEN_VERSION		(605)//address = 0x3702 ,2024.06.05
+/*
 
-//#define MCU_VERSION			(304)//address = 0x3704 ,2022.03.04
-//#define DIWEN_VERSION		(301)//address = 0x3702 ,2023.03.01
+版本记录:
+一、MCU_VERSION = 903 , DIWEN_VERSION = 817 (常规修改)
+1.修改语音播报功能之：异常时拿下袋子 不播报异常
 
-//#define MCU_VERSION		  (301)//address = 0x3701 ,2022.03.01
-//#define DIWEN_VERSION		(301)//address = 0x3702 ,2023.03.01
-
-//#define MCU_VERSION			(725)//address = 0x3701 ,2022.07.25
-//#define DIWEN_VERSION		(725)//address = 0x3702 ,2022.07.25
-
-//#define MCU_VERSION		  (33)//2022.01.27
-//#define DIWEN_VERSION		(33)//2022.01.27
+二、MCU_VERSION = 1215 , DIWEN_VERSION = 1214 (对策南京开发)
+1.修改进入实时界面的条件判断
+1.1.如果管夹阀功能关闭 则无需判断管夹阀状态是否为关闭
+1.2.如果管夹阀功能打开 200 300 400 档位需要判断管夹阀功能为关闭时才能进入实时界面
+1.3.如果管夹阀功能打开 200 自定义 400 南京的特殊处理 自定义不需要判断管夹阀
+1.4.需要双击是才能结束生效
+ */
 
 #define MOTOR_POS_Left		STM32_POS_3
 #define MOTOR_POS_Middle	STM32_POS_1

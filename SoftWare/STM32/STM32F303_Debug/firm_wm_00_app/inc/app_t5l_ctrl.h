@@ -376,7 +376,7 @@ typedef enum
 	SDWE_CYCLE_DATA_STATUS_MAX
 }enumSDWeCycleDataType;
 
-#define SDWE_CYCLE_DATA_SPECIAL_HANDLE (TRUE)
+#define VGUS_NANJIN_SPECIAL_HANDLE (TRUE)
 
 typedef enum
 {
@@ -562,6 +562,7 @@ typedef struct structSdweType
 	UINT8 liusuSlowWarnPrintf;/*< 持续流速低已播报 */
 	UINT8 fromShiShiToStartPage;/*< 从实时界面 到 开始界面 */
 	UINT32 kongDaiRecodeWeight;/*< 从实时界面 到 开始界面 记录的空袋重量*/
+	UINT32 doubleTouchJieshu_Ticks;/*< 从实时界面 到 开始界面 结束需要双击*/
 }T5LType;
 extern T5LType g_T5L;
 
@@ -637,6 +638,7 @@ extern T5LType g_T5L;
 	\
 	FALSE,/*< 采集完成标志 */\
 	\
+	0,\
 	0,\
 	0,\
 	0,\

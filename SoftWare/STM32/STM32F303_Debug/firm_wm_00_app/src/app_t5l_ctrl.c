@@ -1006,6 +1006,7 @@ UINT8 sdweAskVaribleData(UINT16 varAdd, UINT16 varData)
 	//
 	pSdwe->SetAdd = varAdd ;
 	pSdwe->SetData = varData ;
+	UINT32 doubleTouchJieshu = 0 ;
 	//receive address from SDWE
 	if(0xffff != pSdwe->SetAdd)
 	{
@@ -1088,7 +1089,23 @@ UINT8 sdweAskVaribleData(UINT16 varAdd, UINT16 varData)
 		}
 		else if((SDWE_BACKANDSET_B_CONTRL_ADDRESS == pSdwe->SetAdd) && (SDWE_BACKANDSET_B_CONTRL_ADDRESS == pSdwe->SetData))
 		{
-			g_T5L.backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
+			#if (TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+				if(g_T5L.doubleTouchJieshu_Ticks < g_T5L.CurTick)
+				{
+					doubleTouchJieshu = g_T5L.CurTick - g_T5L.doubleTouchJieshu_Ticks;
+				}
+				else
+				{
+					doubleTouchJieshu = g_T5L.doubleTouchJieshu_Ticks - g_T5L.CurTick;
+				}
+				if(doubleTouchJieshu < 1000)
+				{
+					g_T5L.backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
+				}
+				g_T5L.doubleTouchJieshu_Ticks = g_T5L.CurTick;
+			#else
+				g_T5L.backReturnBSetContrl[SYS_CTL_REG_EVENT_INDEX] = SYS_CTL_EVENT_VALID;
+			#endif
 		}
 		else if((SDWE_GJF_CONTRL_ADDRESS == pSdwe->SetAdd) && (SDWE_GJF_CONTRL_ADDRESS == pSdwe->SetData))
 		{
@@ -1836,7 +1853,11 @@ void screenSDWe_CaiJiWanCheng_Handle(void)
 			//设置暂停/运行 = 暂停 ； 设置返回/结束 = 返回
 			SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_ZT_YX,SDWeZhanTingYuXing_ZhanTing);
 			SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_A,SDWeFanHuiJieShuSeZhi_KongBai);//A = 空白
-			SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_FanHui);//B = 返回
+			#if (TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+				SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_JieShu); //设置返回结束B = 结束
+				#else
+				SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_FanHui);//B = 返回
+			#endif
 		}
 	}
 	else
@@ -2462,7 +2483,7 @@ void screenSDWe_CycleDataSend(UINT16 cycle)
 	//实时采集页面 计算百分比等
 	if(SDWeCurPage_ShiShiJieMian == g_T5L.curPage)
 	{
-		#if SDWE_CYCLE_DATA_SPECIAL_HANDLE
+		#if (TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
 			g_T5L.fromShiShiToStartPage = TRUE;
 			g_T5L.kongDaiRecodeWeight = GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_KONGDAI_WEIGHT);
 		#endif
@@ -2529,20 +2550,12 @@ void screenSDWe_CycleDataSend(UINT16 cycle)
 		SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT,0);
 		SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_PERCENT_TUBIAO,0);
 		//特殊处理 保证开始界面显示纯重量
-		#if SDWE_CYCLE_DATA_SPECIAL_HANDLE
+		#if (TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
 			// 纯重量 = 总重量 - 空袋重量
 			if(g_T5L.fromShiShiToStartPage == FALSE)//如果是非从实时界面跳回主界面
 			{
-				//if(weight < 0)
-				{
-				//	SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_KONGDAI_WEIGHT,0);
-					//纯重量 = 总重量 - 空袋重量 = -x - 0 = -x ; 提示去皮
-				}
-				//else
-				{
-					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_KONGDAI_WEIGHT,weight);
-					//纯重量 = 总重量 - 空袋重量 = -x - x = 0 ; 开始界面的右上角数据 空袋重量 = 总重量 , 进而纯重=0 
-				}
+				SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_KONGDAI_WEIGHT,weight);
+				//纯重量 = 总重量 - 空袋重量 = -x - x = 0 ; 开始界面的右上角数据 空袋重量 = 总重量 , 进而纯重=0 
 			}
 			else//如果是从实时界面跳回的
 			{
@@ -2941,7 +2954,11 @@ UINT8 runContrl_Handle(UINT16 eventVlu)
 					//设置cycleData
 					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_ZT_YX,SDWeZhanTingYuXing_ZhanTing);//设置运行/暂停 = 暂停
 					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_A,SDWeFanHuiJieShuSeZhi_KongBai);//设置返回结束A = 空白
-					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_KongBai);//设置返回结束B = 空白
+					#if (TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+						SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_JieShu); //设置返回结束B = 结束
+						#else
+						SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_FanHui);//B = 返回
+					#endif
 
 					//开管夹阀
 					app_gjf_handle(SDWeFaKaiFaGuan_FaKai);
@@ -3010,9 +3027,23 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 	static UINT8 status = 0;
 	static UINT16 gotoPage = 0;
 	(void)eventVlu;
-	//条件判断
-	if(((TRUE == gSystemPara.u16_kaiqi_guanjiafa_gongneng) && (SDWeFaKaiFaGuan_FaGuan == GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FK_FG)))
-		|| (TRUE != gSystemPara.u16_kaiqi_guanjiafa_gongneng) )
+	UINT16 dangwei = 0 ;
+	//进入实时界面的条件判断
+	//1.如果管夹阀功能关闭 则无需判断管夹阀状态是否为关闭
+	//2.如果管夹阀功能打开 200 300 400 档位需要判断管夹阀功能为关闭时才能进入实时界面
+	//3.如果管夹阀功能打开 200 自定义 400 南京的特殊处理 自定义不需要判断管夹阀
+	#if(TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+	if( 
+		(TRUE != gSystemPara.u16_kaiqi_guanjiafa_gongneng) ||//1
+		((300 == g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_STATUS_INDEX]) || (TRUE == key_EventGet(TBES_300_MODLE_CHOICE))) || //自定义 南京
+		((TRUE == gSystemPara.u16_kaiqi_guanjiafa_gongneng) && (SDWeFaKaiFaGuan_FaGuan == GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FK_FG)))//2
+    	)
+	#else
+	if( 
+		(TRUE != gSystemPara.u16_kaiqi_guanjiafa_gongneng) ||//1
+		((TRUE == gSystemPara.u16_kaiqi_guanjiafa_gongneng) && (SDWeFaKaiFaGuan_FaGuan == GET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FK_FG)))//2
+    	)
+	#endif
 	{
 		switch(status)
 		{
@@ -3047,6 +3078,7 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 					{
 						gotoPage = SDWeCurPage_ShiShiJieMian;
 					}
+					dangwei = 200;
 				}
 				else if((300 == g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_STATUS_INDEX]) || (TRUE == key_EventGet(TBES_300_MODLE_CHOICE)))
 				{
@@ -3072,11 +3104,14 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 					#else
 						kongDaiWeight_Matched = TRUE;
 					#endif	
-					kongDaiWeight_Matched = TRUE;
+					#if(TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+						kongDaiWeight_Matched = TRUE;
+					#endif
 					if(TRUE == kongDaiWeight_Matched)
 					{
 						gotoPage = SDWeCurPage_TuanCai;
-					}				
+					}	
+					dangwei = 300;			
 				}
 				else if((400 == g_T5L.enterRealTimeSetContrl[SYS_CTL_REG_STATUS_INDEX]) || (TRUE == key_EventGet(TBES_400_MODLE_CHOICE)))
 				{
@@ -3106,6 +3141,7 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 					{
 						gotoPage = SDWeCurPage_ShiShiJieMian;
 					}
+					dangwei = 400;
 				}
 				else
 				{
@@ -3122,14 +3158,21 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 					{
 						gotoPage = SDWeCurPage_ShiShiJieMian;
 					}
+					dangwei = 0;
 				}
 
 				//当空袋判断 满足条件
 				if(TRUE == kongDaiWeight_Matched)
 				{
 					//空袋满足：语音提示“空袋正常”
-					screenSDWe_CaiJiYuYin_Set(SDWEVoicePrintf_KongDaiZhengChang,TRUE);
-					
+					#if(TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+						if ((dangwei == 200) || (dangwei == 400))
+						{
+							screenSDWe_CaiJiYuYin_Set(SDWEVoicePrintf_KongDaiZhengChang,TRUE);
+						}
+					#else
+						screenSDWe_CaiJiYuYin_Set(SDWEVoicePrintf_KongDaiZhengChang,TRUE);
+					#endif
 					//1、屏周期数据准备
 					//SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_TOTAL_WEIGHT,);
 					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_CUN_WEIGHT,0);
@@ -3149,7 +3192,11 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 
 					//3、两个触控：A返回/结束 B返回/结束 显示
 					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_A,SDWeFanHuiJieShuSeZhi_KongBai);//A = 空白
-					SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_FanHui);//B = 返回
+					#if (TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+						SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_JieShu); //设置返回结束B = 结束
+					#else
+						SET_SDWE_CUR_CYCLE_DATA(SDWE_CYCLE_DATA_STATUS_FJS_B,SDWeFanHuiJieShuSeZhi_FanHui);//B = 返回
+					#endif
 
 					//4、管夹阀触控：阀开/阀关 显示
 					if(TRUE != gSystemPara.u16_kaiqi_guanjiafa_gongneng)
@@ -3158,7 +3205,18 @@ UINT8 enterRealTimeSet_Handle(UINT16 eventVlu)
 					}
 					else
 					{
-						app_gjf_handle(SDWeFaKaiFaGuan_FaGuan);//阀开/关 = 阀关 
+						#if(TRUE == VGUS_NANJIN_SPECIAL_HANDLE)
+							if ((dangwei == 200) || (dangwei == 400))
+							{
+								app_gjf_handle(SDWeFaKaiFaGuan_FaGuan);//阀开/关 = 阀关 
+							}
+							else
+							{
+								app_gjf_handle(SDWeFaKaiFaGuan_FaKai);//阀开/关 = 空白
+							}
+						#else
+							app_gjf_handle(SDWeFaKaiFaGuan_FaGuan);//阀开/关 = 阀关 
+						#endif
 					}
 
 					//5、触控：暂停/运行 显示
